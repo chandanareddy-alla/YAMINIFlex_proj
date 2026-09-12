@@ -18,6 +18,14 @@ export const AuthProvider = ({ children }) => {
     setAdmin(adminInfo);
   };
 
+  const updateAdmin = (adminInfo, token) => {
+    if (token) {
+      localStorage.setItem('admin_token', token);
+    }
+    localStorage.setItem('admin_info', JSON.stringify(adminInfo));
+    setAdmin(adminInfo);
+  };
+
   const logout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_info');
@@ -25,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ admin, login, logout, isAuthenticated: !!admin }}>
+    <AuthContext.Provider value={{ admin, login, logout, updateAdmin, isAuthenticated: !!admin }}>
       {children}
     </AuthContext.Provider>
   );
