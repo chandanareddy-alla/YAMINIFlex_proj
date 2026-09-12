@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CustomerAuthProvider } from './context/CustomerAuthContext';
@@ -30,8 +31,53 @@ import AdminDesignEdit from './pages/admin/AdminDesignEdit';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminCustomers from './pages/admin/AdminCustomers';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 
 function App() {
+  useEffect(() => {
+    const selector = [
+      'section',
+      '.page-container',
+      '.contact-panel',
+      '.catalogue-grid',
+      '.order-form-panel',
+      '.payment-panel',
+      '.auth-card',
+      '.track-panel',
+      '.preview-card',
+      '.service-card',
+      '.design-card',
+      '.hero-visual-card'
+    ].join(', ');
+
+    const allTargets = Array.from(document.querySelectorAll(selector));
+
+    allTargets.forEach((node, index) => {
+      node.classList.add('scroll-reveal');
+      node.style.transitionDelay = `${Math.min(index * 40, 360)}ms`;
+    });
+
+    if (!('IntersectionObserver' in window)) {
+      allTargets.forEach((node) => node.classList.add('is-visible'));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, {
+      threshold: 0.16,
+      rootMargin: '0px 0px -40px 0px',
+    });
+
+    allTargets.forEach((node) => observer.observe(node));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <AuthProvider>
     <CustomerAuthProvider>
@@ -66,6 +112,7 @@ function App() {
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
           </Route>
         </Route>
 

@@ -18,6 +18,8 @@ import {
   FaFlag,
   FaChalkboardTeacher,
   FaClock,
+  FaChevronLeft,
+  FaChevronRight,
 } from 'react-icons/fa';
 import { GiCandleFlame } from 'react-icons/gi';
 import { api } from '../../api/client';
@@ -40,6 +42,45 @@ import './Home.css';
 
 const API_ORIGIN = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace('/api', '');
 const resolveImage = (src) => (src?.startsWith('http') ? src : `${API_ORIGIN}${src || ''}`);
+
+const PRINT_CAMPAIGN_IMAGES = [
+  {
+    url: 'https://printo-s3.dietpixels.net/2_1787053473.jpg?quality=70&format=webp&w=1080',
+    alt: 'Premium business print campaign',
+    tag: 'Business Cards',
+    title: 'Premium Print System',
+  },
+  {
+    url: 'https://printo-s3.dietpixels.net/321_1789041220.jpg?quality=70&format=webp&w=1080',
+    alt: 'Outdoor signage and flex campaign',
+    tag: 'Flex & Signage',
+    title: 'Outdoor Visibility',
+  },
+  {
+    url: 'https://printo-s3.dietpixels.net/33_1789038708.jpg?quality=70&format=webp&w=1080',
+    alt: 'Creative print studio production',
+    tag: 'Creative Studio',
+    title: 'Print Production Desk',
+  },
+   {
+    url: 'https://printo-s3.dietpixels.net/2_1787053473.jpg?quality=70&format=webp&w=1080',
+    alt: 'Premium business print campaign',
+    tag: 'Business Cards',
+    title: 'Premium Print System',
+  },
+  {
+    url: 'https://printo-s3.dietpixels.net/321_1789041220.jpg?quality=70&format=webp&w=1080',
+    alt: 'Outdoor signage and flex campaign',
+    tag: 'Flex & Signage',
+    title: 'Outdoor Visibility',
+  },
+  {
+    url: 'https://printo-s3.dietpixels.net/33_1789038708.jpg?quality=70&format=webp&w=1080',
+    alt: 'Creative print studio production',
+    tag: 'Creative Studio',
+    title: 'Print Production Desk',
+  },
+];
 
 const CATEGORY_ICONS = {
   birthday: FaBirthdayCake,
@@ -79,6 +120,7 @@ const DesignPreviewCard = ({ design, badge }) => (
 const Home = () => {
   const navigate = useNavigate();
   const [finderSearch, setFinderSearch] = useState('');
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -143,6 +185,17 @@ const Home = () => {
     window.open(whatsappLinkWithMessage(message), '_blank', 'noopener,noreferrer');
   };
 
+  const moveCarousel = (direction) => {
+    const nextIndex = (carouselIndex + direction + PRINT_CAMPAIGN_IMAGES.length) % PRINT_CAMPAIGN_IMAGES.length;
+    setCarouselIndex(nextIndex);
+  };
+
+  const visibleImages = [
+    PRINT_CAMPAIGN_IMAGES[carouselIndex],
+    PRINT_CAMPAIGN_IMAGES[(carouselIndex + 1) % PRINT_CAMPAIGN_IMAGES.length],
+    PRINT_CAMPAIGN_IMAGES[(carouselIndex + 2) % PRINT_CAMPAIGN_IMAGES.length],
+  ];
+
   return (
     <>
       {/* HERO */}
@@ -180,7 +233,42 @@ const Home = () => {
           <div className="hero-visual">
             <div className="hero-visual-card">
               <span className="hero-visual-tag">Durst P5 350 • Live Operation</span>
-              <div className="hero-visual-image" aria-hidden="true" />
+              <div className="hero-visual-image" aria-hidden="true">
+                <span className="hero-visual-scanline"></span>
+                <span className="hero-visual-image-label">LED • FLEX • SIGNAGE</span>
+                <span className="hero-visual-image-subtitle">PRINT WORKSHOP</span>
+                <span className="hero-visual-image-bars">
+                  <span></span><span></span><span></span><span></span>
+                </span>
+
+                <div className="hero-screen-strip">
+                  <div className="hero-screen-card hero-screen-card-1">
+                    <span className="hero-screen-number">01</span>
+                    <span className="hero-screen-title">Business Cards</span>
+                    <span className="hero-screen-meta">Premium Print</span>
+                  </div>
+                  <div className="hero-screen-card hero-screen-card-2">
+                    <span className="hero-screen-number">02</span>
+                    <span className="hero-screen-title">Flex Boards</span>
+                    <span className="hero-screen-meta">Outdoor Ready</span>
+                  </div>
+                  <div className="hero-screen-card hero-screen-card-3">
+                    <span className="hero-screen-number">03</span>
+                    <span className="hero-screen-title">LED Signs</span>
+                    <span className="hero-screen-meta">Retail Impact</span>
+                  </div>
+                  <div className="hero-screen-card hero-screen-card-4">
+                    <span className="hero-screen-number">04</span>
+                    <span className="hero-screen-title">Brochures</span>
+                    <span className="hero-screen-meta">Brand Collateral</span>
+                  </div>
+                  <div className="hero-screen-card hero-screen-card-5">
+                    <span className="hero-screen-number">05</span>
+                    <span className="hero-screen-title">Event Printing</span>
+                    <span className="hero-screen-meta">Fast Dispatch</span>
+                  </div>
+                </div>
+              </div>
               <div className="hero-visual-caption">
                 <strong>Ultra High-Res 1440 DPI</strong>
                 <span>Same-Day Dispatch</span>
@@ -197,6 +285,127 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      <section className="page-container business-needs-section">
+        <div className="business-needs-header">
+          <div>
+            <span className="eyebrow">Shop by Business Needs</span>
+            <h2 className="section-title">Find everything for your kind of work</h2>
+            <p className="section-subtitle">Curated print, merch &amp; gifting bundles for your industry — the way printo.in organises it.</p>
+          </div>
+          <a className="business-needs-see-all" href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+            See all →
+          </a>
+        </div>
+
+        <div className="business-needs-grid">
+          <article className="business-need-card business-need-card-image">
+            <div className="business-need-image">
+              <img src="https://printo-s3.dietpixels.net/Cafe-&-Restaurant-_1786104544.jpg?quality=70&format=webp&w=640" alt="Cafe & Restaurant" loading="lazy" />
+            </div>
+            <div className="business-need-card-content">
+              <span className="business-need-category">Cafe &amp; Restaurant</span>
+              <span className="business-need-card-title">Menus • labels • tents</span>
+              <button type="button" className="business-need-button">Explore →</button>
+            </div>
+          </article>
+
+          <article className="business-need-card business-need-card-image">
+            <div className="business-need-image">
+              <img src="https://printo-s3.dietpixels.net/C_1787814781.jpg?quality=70&format=webp&w=640" alt="Schools & Campus" loading="lazy" />
+            </div>
+            <div className="business-need-card-content">
+              <span className="business-need-category">Schools &amp; Campus</span>
+              <span className="business-need-card-title">IDs • certificates • books</span>
+              <button type="button" className="business-need-button">Explore →</button>
+            </div>
+          </article>
+
+          <article className="business-need-card business-need-card-image">
+            <div className="business-need-image">
+              <img src="https://printo-s3.dietpixels.net/Events_1786104774.jpg?quality=70&format=webp&w=640" alt="Events & Promotions" loading="lazy" />
+            </div>
+            <div className="business-need-card-content">
+              <span className="business-need-category">Events &amp; Promotions</span>
+              <span className="business-need-card-title">Standees • flyers • merch</span>
+              <button type="button" className="business-need-button">Explore →</button>
+            </div>
+          </article>
+
+          <article className="business-need-card business-need-card-image">
+            <div className="business-need-image">
+              <img src="https://printo-s3.dietpixels.net/323_1787814782.jpg?quality=70&format=webp&w=640" alt="Corporate & Business" loading="lazy" />
+            </div>
+            <div className="business-need-card-content">
+              <span className="business-need-category">Corporate &amp; Business</span>
+              <span className="business-need-card-title">Letters • boards • office sets</span>
+              <button type="button" className="business-need-button">Explore →</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {/* PREMIUM PRINT SHOWCASE */}
+      <section className="page-container premium-showcase">
+        <div className="premium-showcase-copy">
+          <span className="eyebrow">Premium Print Studio</span>
+          <h2 className="section-title">From concept to print-ready production</h2>
+          <p className="section-subtitle">
+            Design, production, finishing and delivery support for business cards, letterheads, banners, brochures,
+            event graphics and custom flex display campaigns.
+          </p>
+
+          <div className="showcase-highlights">
+            <div className="showcase-highlight">
+              <span className="showcase-highlight-number">01</span>
+              <span className="showcase-highlight-text">Design-first layouts</span>
+            </div>
+            <div className="showcase-highlight">
+              <span className="showcase-highlight-number">02</span>
+              <span className="showcase-highlight-text">Factory-grade printing</span>
+            </div>
+            <div className="showcase-highlight">
+              <span className="showcase-highlight-number">03</span>
+              <span className="showcase-highlight-text">Fast delivery support</span>
+            </div>
+          </div>
+
+          <div className="showcase-actions">
+            <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+              <FaWhatsapp /> Get a Free Quote
+            </a>
+            <Link to="/catalogue" className="btn btn-outline">
+              Explore Designs
+            </Link>
+          </div>
+        </div>
+
+        <div className="showcase-card-panel">
+          <div className="showcase-card-image">
+            <span className="showcase-card-image-label">Print Desk</span>
+            <span className="showcase-card-image-grid">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+          <div className="showcase-card-list">
+            <div className="showcase-card-list-row">
+              <span className="showcase-card-list-label">Business Cards</span>
+              <span className="showcase-card-list-value">Premium</span>
+            </div>
+            <div className="showcase-card-list-row">
+              <span className="showcase-card-list-label">Brochures</span>
+              <span className="showcase-card-list-value">High Quality</span>
+            </div>
+            <div className="showcase-card-list-row">
+              <span className="showcase-card-list-label">Flex & Boards</span>
+              <span className="showcase-card-list-value">Outdoor Ready</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRINT CAMPAIGN SHOWCASE */}
+  
 
       {/* SERVICES */}
       <section className="page-container">
@@ -256,7 +465,37 @@ const Home = () => {
           </div>
         </div>
       </section>
+   <section className="page-container print-carousel-section">
+        <div className="print-carousel-heading">
+          <div>
+            <span className="eyebrow">Studio Collection</span>
+            <h2 className="section-title">Print Campaign Images</h2>
+          </div>
+        </div>
 
+        <div className="print-carousel-frame">
+          <button type="button" className="print-carousel-arrow print-carousel-arrow-left" onClick={() => moveCarousel(-1)} aria-label="Previous image">
+            <FaChevronLeft />
+          </button>
+
+          <div className="print-carousel-track">
+            {visibleImages.map((image, index) => (
+              <article className="print-carousel-card" key={`${image.title}-${index}`}>
+                <img src={image.url} alt={image.alt} loading="lazy" />
+                <div className="print-carousel-card-overlay">
+                  <span className="print-carousel-card-tag">{image.tag}</span>
+                  <h3>{image.title}</h3>
+                  <span className="print-carousel-card-line">Creative Print Workflow</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <button type="button" className="print-carousel-arrow print-carousel-arrow-right" onClick={() => moveCarousel(1)} aria-label="Next image">
+            <FaChevronRight />
+          </button>
+        </div>
+      </section>
       {/* CATEGORIES */}
       <section className="page-container">
         <span className="eyebrow">Organized Collections</span>

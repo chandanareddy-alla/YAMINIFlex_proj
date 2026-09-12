@@ -6,6 +6,8 @@ import {
   FaClipboardList,
   FaUsers,
   FaSignOutAlt,
+  FaSearch,
+  FaChartBar,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.css';
@@ -24,7 +26,16 @@ const AdminLayout = () => {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <div className="admin-sidebar-title">YAMINI ADMIN</div>
+        <div className="admin-brand">
+          <div className="admin-brand-icon">
+            <span className="admin-brand-icon-inner">Y</span>
+          </div>
+          <div className="admin-brand-copy">
+            <span className="admin-brand-title">YAMINI FLEX PRINTING</span>
+            <span className="admin-brand-subtitle">Cherukupalli • Guntur</span>
+          </div>
+        </div>
+
         <nav className="admin-nav">
           <NavLink to="/admin/dashboard" className={linkClass}>
             <FaTachometerAlt /> Dashboard
@@ -41,15 +52,37 @@ const AdminLayout = () => {
           <NavLink to="/admin/customers" className={linkClass}>
             <FaUsers /> Customers
           </NavLink>
+          <NavLink to="/admin/analytics" className={linkClass}>
+            <FaChartBar /> Analytics
+          </NavLink>
         </nav>
+
+        <div className="admin-machine">
+          <span className="admin-machine-title">Machine Run Site</span>
+          <span className="admin-machine-subtitle">Print 3.2m UV • Live</span>
+        </div>
+
         <button className="admin-logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt /> Logout
+          <FaSignOutAlt /> Sign Out
         </button>
       </aside>
+
       <div className="admin-content">
         <header className="admin-topbar">
-          <span>Welcome, {admin?.name || 'Admin'}</span>
+          <div className="admin-topbar-left">
+            <span className="admin-topbar-kicker">YAMINI FLEX PRINTING</span>
+            <span className="admin-topbar-subtitle">Print Hub</span>
+          </div>
+          <div className="admin-topbar-search">
+            <FaSearch />
+            <span>Search boards, invoices...</span>
+          </div>
+          <div className="admin-topbar-user">
+            <span className="admin-topbar-user-icon">{admin?.name?.charAt(0) || 'A'}</span>
+            <span className="admin-topbar-user-name">{admin?.name || 'Admin'}</span>
+          </div>
         </header>
+
         <main className="admin-main">
           <Outlet />
         </main>

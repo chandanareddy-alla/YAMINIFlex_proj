@@ -22,9 +22,26 @@ body {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-cream);
+  background:
+    radial-gradient(circle at top left, rgba(232, 215, 180, 0.82), transparent 24%),
+    radial-gradient(circle at right 20%, rgba(184, 134, 11, 0.10), transparent 16%),
+    var(--color-cream);
   color: var(--color-charcoal);
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  background-image: radial-gradient(rgba(110,20,35,0.08) 1px, transparent 1px);
+  background-size: 30px 30px;
+  transform: perspective(1200px) rotateX(4deg) rotateY(-4deg);
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,1), transparent 100%);
+  animation: grainDrift 12s linear infinite;
+  z-index: -1;
 }
 
 #root {
@@ -47,12 +64,16 @@ button {
   cursor: pointer;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .page-container {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem;
   width: 100%;
   flex: 1;
+  animation: pageRise 640ms ease both;
 }
 
 .section-title {
@@ -77,7 +98,21 @@ button {
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+  transition: transform 220ms ease, box-shadow 260ms ease, background 260ms ease, color 260ms ease;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  left: -120%;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: skewX(-20deg);
+  transition: left 520ms ease;
 }
 
 .btn-primary {
@@ -87,7 +122,12 @@ button {
 
 .btn-primary:hover {
   background-color: var(--color-burgundy-dark);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(110,20,35,0.2);
+}
+
+.btn:hover::after {
+  left: 130%;
 }
 
 .btn-outline {
@@ -99,6 +139,7 @@ button {
 .btn-outline:hover {
   background-color: var(--color-burgundy);
   color: #fff;
+  transform: translateY(-2px);
 }
 
 .btn-gold {
@@ -108,6 +149,8 @@ button {
 
 .btn-gold:hover {
   background-color: #96700a;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(184,134,11,0.20);
 }
 
 .card {
@@ -115,6 +158,13 @@ button {
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--color-cream-dark);
+  transition: transform 280ms ease, box-shadow 280ms ease, border-color 280ms ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 34px rgba(43,39,36,0.16);
+  border-color: var(--color-gold);
 }
 
 .form-group {
@@ -179,4 +229,60 @@ button {
   text-align: center;
   padding: 3rem 1rem;
   color: #857c72;
+}
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  filter: blur(6px);
+  transition: opacity 720ms ease, transform 720ms ease, filter 720ms ease, box-shadow 260ms ease;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+@keyframes pageRise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes grainDrift {
+  from {
+    transform: perspective(1200px) rotateX(4deg) rotateY(-4deg) translateY(0);
+  }
+  to {
+    transform: perspective(1200px) rotateX(4deg) rotateY(-4deg) translateY(12px);
+  }
+}
+
+@keyframes floatGlow {
+  50% {
+    box-shadow: 0 0 0 1px rgba(227,205,154,0.78), 0 0 34px rgba(184,134,11,0.22);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
 }
