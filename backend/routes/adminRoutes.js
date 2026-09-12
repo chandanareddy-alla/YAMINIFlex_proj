@@ -18,7 +18,14 @@ const {
   deleteCategory,
 } = require('../controllers/categoryController');
 const { getOrders, updateOrder } = require('../controllers/orderController');
-const { getCustomers, getCustomerById } = require('../controllers/customerController');
+const {
+  getCustomers,
+  getCustomerById,
+  updateCustomerByAdmin,
+  deleteCustomerByAdmin,
+} = require('../controllers/customerController');
+const { getAdminProfile, updateAdminProfile, updateAdminPassword } = require('../controllers/authController');
+const { getAdminSettings, updateAdminSettings } = require('../controllers/adminSettingsController');
 
 router.use(protectAdmin);
 
@@ -48,8 +55,19 @@ router.delete('/categories/:id', deleteCategory);
 router.get('/orders', getOrders);
 router.put('/orders/:id', upload.single('finalDesignFile'), updateOrder);
 
+// Admin profile
+router.get('/profile', getAdminProfile);
+router.put('/profile', updateAdminProfile);
+router.put('/profile/password', updateAdminPassword);
+
+// Admin settings
+router.get('/settings', getAdminSettings);
+router.put('/settings', updateAdminSettings);
+
 // Customers
 router.get('/customers', getCustomers);
 router.get('/customers/:id', getCustomerById);
+router.put('/customers/:id', updateCustomerByAdmin);
+router.delete('/customers/:id', deleteCustomerByAdmin);
 
 module.exports = router;
