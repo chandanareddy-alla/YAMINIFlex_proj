@@ -347,9 +347,24 @@ const createOrder = async (req, res) => {
     // --------------------------------------------------
     // Send Order Confirmation Email
     // --------------------------------------------------
+    // IMPORTANT:
+    // Do not wait for the email before returning
+    // the newly-created order to the frontend.
+    //
+    // This makes the order creation request faster.
+    // Email continues in the background.
+    // --------------------------------------------------
 
-    // Email failure will NOT fail the order.
-    await sendOrderConfirmationEmail(order);
+    sendOrderConfirmationEmail(order).catch((error) => {
+      console.error(
+        'Background order confirmation email error:',
+        error.message
+      );
+    });
+
+    // --------------------------------------------------
+    // Return response immediately
+    // --------------------------------------------------
 
     return res.status(201).json({
       success: true,
@@ -565,10 +580,12 @@ const updateOrder = async (req, res) => {
     // --------------------------------------------------
 
     if (oldStatus !== order.status) {
-      await sendOrderStatusUpdateEmail(
-        order,
-        oldStatus
-      );
+      sendOrderConfirmationEmail(order).catch((error) => {
+        console.error(
+          'Background order confirmation email error:',
+          error.message
+        );
+      });
     }
 
     return res.json({
