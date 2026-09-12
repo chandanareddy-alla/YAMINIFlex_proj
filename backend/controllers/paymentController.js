@@ -1,3 +1,4 @@
+
 const Order = require('../models/Order');
 
 const {
@@ -14,10 +15,61 @@ const toFiniteNumber = (value, fallback = 0) => {
   return Number.isFinite(number) ? number : fallback;
 };
 
-/**
- * POST /api/payments/phonepe/create
+/*
+ * =========================================================
+ * PRODUCTION URL CONFIGURATION
+ * =========================================================
  *
- * Creates a PhonePe payment for an existing Yamini Flex order.
+ * IMPORTANT:
+ * These values MUST be configured in Render Environment
+ * Variables.
+ *
+ * BACKEND_PUBLIC_URL
+ * = Your deployed Render backend
+ *
+ * FRONTEND_URL
+ * = Your deployed Vercel frontend
+ *
+ * Do NOT use localhost in production.
+ */
+
+const getProductionUrls = () => {
+  const backendUrl =
+    process.env.BACKEND_PUBLIC_URL?.trim();
+
+  const frontendUrl =
+    process.env.FRONTEND_URL?.trim();
+
+  if (!backendUrl) {
+    throw new Error(
+      'BACKEND_PUBLIC_URL environment variable is not configured.'
+    );
+  }
+
+  if (!frontendUrl) {
+    throw new Error(
+      'FRONTEND_URL environment variable is not configured.'
+    );
+  }
+
+  /*
+   * Remove trailing slashes so that URLs do not become:
+   *
+   * https://example.com//api/...
+   */
+  return {
+    backendUrl: backendUrl.replace(/\/+$/, ''),
+    frontendUrl: frontendUrl.replace(/\/+$/, ''),
+  };
+};
+
+/*
+ * =========================================================
+ * POST /api/payments/phonepe/create
+ * =========================================================
+ *
+ * Creates a PhonePe payment for an existing Yamini Flex
+ * order.
  */
 const createPhonePeOrder = async (req, res) => {
   try {
@@ -30,7 +82,16 @@ const createPhonePeOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(orderId);
+    /*
+     * Make sure production URLs are configured BEFORE
+     * creating the PhonePe payment.
+     */
+    const {
+      backendUrl,
+    } = getProductionUrls();
+
+    const order =
+      await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({
@@ -39,7 +100,9 @@ const createPhonePeOrder = async (req, res) => {
       });
     }
 
-    if (order.paymentMethod !== 'PhonePe') {
+    if (
+      order.paymentMethod !== 'PhonePe'
+    ) {
       return res.status(400).json({
         success: false,
         message:
@@ -47,17 +110,24 @@ const createPhonePeOrder = async (req, res) => {
       });
     }
 
-    if (order.paymentStatus === 'Paid') {
+    if (
+      order.paymentStatus === 'Paid'
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'This order has already been paid',
+        message:
+          'This order has already been paid',
       });
     }
 
-    const orderAmount = toFiniteNumber(
-      order.grandTotal,
-      toFiniteNumber(order.totalAmount, 0)
-    );
+    const orderAmount =
+      toFiniteNumber(
+        order.grandTotal,
+        toFiniteNumber(
+          order.totalAmount,
+          0
+        )
+      );
 
     if (orderAmount <= 0) {
       return res.status(400).json({
@@ -66,11 +136,18 @@ const createPhonePeOrder = async (req, res) => {
       });
     }
 
-    // Convert ₹ to paise
-    const amountInPaise = Math.round(
-      orderAmount * 100
-    );
+    /*
+     * Convert rupees to paise.
+     */
+    const amountInPaise =
+      Math.round(
+        orderAmount * 100
+      );
 
+    /*
+     * Reuse the existing PhonePe merchant order ID
+     * if one already exists.
+     */
     let merchantOrderId =
       order.phonePeOrderId;
 
@@ -80,16 +157,18 @@ const createPhonePeOrder = async (req, res) => {
     }
 
     /*
-     * PhonePe redirects the customer to the BACKEND
-     * after payment.
+     * =====================================================
+     * PHONEPE CALLBACK URL
+     * =====================================================
      *
-     * Backend verifies the payment and then redirects
-     * the customer to Home.
+     * PhonePe sends the customer back to the deployed
+     * Render backend.
+     *
+     * Render backend verifies the payment with PhonePe.
+     *
+     * After verification, backend redirects the customer
+     * to the deployed Vercel frontend.
      */
-    const backendUrl =
-      process.env.BACKEND_PUBLIC_URL ||
-      'http://localhost:5000';
-
     const redirectUrl =
       `${backendUrl}/api/payments/phonepe/return` +
       `?orderId=${encodeURIComponent(
@@ -100,13 +179,40 @@ const createPhonePeOrder = async (req, res) => {
       )}`;
 
     console.log(
-      'Creating PhonePe payment:',
-      {
-        orderId: order._id.toString(),
-        merchantOrderId,
-        amountInPaise,
-        redirectUrl,
-      }
+      '========================================'
+    );
+
+    console.log(
+      'CREATING PHONEPE PAYMENT'
+    );
+
+    console.log(
+      'YAMINI ORDER ID:',
+      order._id.toString()
+    );
+
+    console.log(
+      'YAMINI ORDER NUMBER:',
+      order.orderId
+    );
+
+    console.log(
+      'PHONEPE MERCHANT ORDER ID:',
+      merchantOrderId
+    );
+
+    console.log(
+      'AMOUNT IN PAISE:',
+      amountInPaise
+    );
+
+    console.log(
+      'PHONEPE CALLBACK URL:',
+      redirectUrl
+    );
+
+    console.log(
+      '========================================'
     );
 
     const phonePeResponse =
@@ -116,7 +222,9 @@ const createPhonePeOrder = async (req, res) => {
         redirectUrl,
       });
 
-    if (!phonePeResponse?.redirectUrl) {
+    if (
+      !phonePeResponse?.redirectUrl
+    ) {
       return res.status(500).json({
         success: false,
         message:
@@ -124,6 +232,9 @@ const createPhonePeOrder = async (req, res) => {
       });
     }
 
+    /*
+     * Store PhonePe merchant order ID on the Yamini order.
+     */
     order.phonePeOrderId =
       merchantOrderId;
 
@@ -139,9 +250,13 @@ const createPhonePeOrder = async (req, res) => {
       success: true,
       message:
         'PhonePe payment created',
+
       data: {
-        orderId: order._id,
+        orderId:
+          order._id,
+
         merchantOrderId,
+
         redirectUrl:
           phonePeResponse.redirectUrl,
       },
@@ -161,37 +276,82 @@ const createPhonePeOrder = async (req, res) => {
   }
 };
 
-/**
+/*
+ * =========================================================
  * GET /api/payments/phonepe/return
+ * =========================================================
  *
- * PhonePe sends the customer here after checkout.
+ * PhonePe redirects the CUSTOMER here after checkout.
  *
- * Backend verifies the payment directly with PhonePe.
- * If successful, customer is redirected directly to Home.
+ * IMPORTANT:
+ *
+ * 1. Backend receives the callback.
+ * 2. Backend verifies the payment directly with PhonePe.
+ * 3. Backend checks the amount.
+ * 4. Backend updates the Yamini order.
+ * 5. Backend sends the payment-success email.
+ * 6. Backend redirects customer to Vercel HOME.
+ *
+ * Therefore the customer never needs to see a callback page.
  */
 const handlePhonePeReturn = async (
   req,
   res
 ) => {
-  const frontendUrl =
-    process.env.FRONTEND_URL ||
-    'http://localhost:5173';
+  let frontendUrl = null;
 
   try {
+    /*
+     * Get production frontend URL.
+     *
+     * If this is missing, we cannot safely redirect
+     * the customer.
+     */
+    const productionUrls =
+      getProductionUrls();
+
+    frontendUrl =
+      productionUrls.frontendUrl;
+
     const {
       orderId,
       merchantOrderId,
     } = req.query;
 
     console.log(
-      'PhonePe return received:',
-      {
-        orderId,
-        merchantOrderId,
-      }
+      '========================================'
     );
 
-    if (!orderId || !merchantOrderId) {
+    console.log(
+      'PHONEPE RETURN RECEIVED'
+    );
+
+    console.log(
+      'ORDER ID:',
+      orderId
+    );
+
+    console.log(
+      'MERCHANT ORDER ID:',
+      merchantOrderId
+    );
+
+    console.log(
+      'FRONTEND URL:',
+      frontendUrl
+    );
+
+    console.log(
+      '========================================'
+    );
+
+    /*
+     * Missing callback information.
+     */
+    if (
+      !orderId ||
+      !merchantOrderId
+    ) {
       console.error(
         'PhonePe return missing orderId or merchantOrderId'
       );
@@ -201,6 +361,9 @@ const handlePhonePeReturn = async (
       );
     }
 
+    /*
+     * Find Yamini order.
+     */
     const order =
       await Order.findById(orderId);
 
@@ -229,6 +392,7 @@ const handlePhonePeReturn = async (
         {
           stored:
             order.phonePeOrderId,
+
           received:
             merchantOrderId,
         }
@@ -240,22 +404,31 @@ const handlePhonePeReturn = async (
     }
 
     /*
-     * Already paid.
+     * =====================================================
+     * ALREADY PAID
+     * =====================================================
      *
-     * This also prevents the payment success
-     * email from being sent twice if PhonePe
-     * redirects/calls this URL again.
+     * Prevent duplicate processing and duplicate emails.
      */
     if (
       order.paymentStatus === 'Paid'
     ) {
+      console.log(
+        'Order is already marked Paid.'
+      );
+
       return res.redirect(
         `${frontendUrl}/`
       );
     }
 
     /*
-     * Ask PhonePe for the real payment status.
+     * =====================================================
+     * ASK PHONEPE FOR THE REAL PAYMENT STATUS
+     * =====================================================
+     *
+     * PhonePe may need a short amount of time to update
+     * the transaction state, so we retry up to 3 times.
      */
     let statusResponse = null;
 
@@ -286,6 +459,10 @@ const handlePhonePeReturn = async (
               ''
           ).toUpperCase();
 
+        /*
+         * Stop retrying when PhonePe has reached
+         * a final state.
+         */
         if (
           state === 'COMPLETED' ||
           state === 'FAILED' ||
@@ -304,7 +481,10 @@ const handlePhonePeReturn = async (
       if (attempt < 3) {
         await new Promise(
           (resolve) =>
-            setTimeout(resolve, 2000)
+            setTimeout(
+              resolve,
+              2000
+            )
         );
       }
     }
@@ -317,14 +497,20 @@ const handlePhonePeReturn = async (
       ).toUpperCase();
 
     console.log(
-      'Final PhonePe state:',
+      'FINAL PHONEPE STATE:',
       state
     );
 
     /*
-     * Only COMPLETED can mark the order as paid.
+     * =====================================================
+     * SUCCESS
+     * =====================================================
+     *
+     * Only COMPLETED can mark the Yamini order as Paid.
      */
-    if (state === 'COMPLETED') {
+    if (
+      state === 'COMPLETED'
+    ) {
       const phonePeAmount =
         toFiniteNumber(
           statusResponse?.amount ??
@@ -344,7 +530,12 @@ const handlePhonePeReturn = async (
         );
 
       /*
-       * Verify payment amount.
+       * ===================================================
+       * PAYMENT AMOUNT VERIFICATION
+       * ===================================================
+       *
+       * If PhonePe provides an amount, it MUST match
+       * the Yamini order amount.
        */
       if (
         phonePeAmount > 0 &&
@@ -364,6 +555,11 @@ const handlePhonePeReturn = async (
         );
       }
 
+      /*
+       * ===================================================
+       * TRANSACTION ID
+       * ===================================================
+       */
       const transactionId =
         statusResponse?.transactionId ||
         statusResponse?.data
@@ -376,8 +572,14 @@ const handlePhonePeReturn = async (
           ?.transactionId ||
         merchantOrderId;
 
-      const now = new Date();
+      const now =
+        new Date();
 
+      /*
+       * ===================================================
+       * UPDATE ORDER
+       * ===================================================
+       */
       order.paymentStatus =
         'Paid';
 
@@ -400,20 +602,17 @@ const handlePhonePeReturn = async (
         );
 
       order.paymentDate =
-        now.toISOString().slice(
-          0,
-          10
-        );
+        now
+          .toISOString()
+          .slice(0, 10);
 
       order.paymentTime =
         now.toLocaleTimeString();
 
       /*
        * IMPORTANT:
-       * "Payment Confirmed" is NOT allowed
-       * by the Order schema enum.
        *
-       * Use "confirmed".
+       * Keep this value compatible with your Order schema.
        */
       order.status =
         'confirmed';
@@ -462,30 +661,55 @@ const handlePhonePeReturn = async (
       );
 
       /*
-       * Send Payment Successful Email.
+       * ===================================================
+       * PAYMENT SUCCESS EMAIL
+       * ===================================================
        *
-       * This happens ONLY after:
-       * 1. PhonePe says COMPLETED
-       * 2. Amount is verified
-       * 3. Order is saved as Paid
+       * The payment is already saved as Paid.
        *
-       * Email failure will NOT make the payment fail.
+       * Email failure should NOT change the payment result.
        */
-      await sendPaymentSuccessEmail(
-        order
-      );
+      try {
+        await sendPaymentSuccessEmail(
+          order
+        );
+      } catch (emailError) {
+        console.error(
+          'Payment success email failed:',
+          emailError
+        );
+      }
 
       /*
-       * SUCCESS:
-       * Customer goes directly to Yamini Home.
+       * ===================================================
+       * FINAL SUCCESS REDIRECT
+       * ===================================================
+       *
+       * THIS IS THE IMPORTANT PART.
+       *
+       * PhonePe success
+       *       ↓
+       * Backend verification
+       *       ↓
+       * Order marked Paid
+       *       ↓
+       * Customer redirected directly to
+       * Vercel Home page.
        */
+      console.log(
+        'Redirecting customer to Vercel Home:',
+        frontendUrl
+      );
+
       return res.redirect(
         `${frontendUrl}/`
       );
     }
 
     /*
-     * Payment failed/cancelled.
+     * =====================================================
+     * FAILED / CANCELLED
+     * =====================================================
      */
     if (
       state === 'FAILED' ||
@@ -497,16 +721,32 @@ const handlePhonePeReturn = async (
 
       await order.save();
 
+      console.log(
+        'PhonePe payment failed/cancelled.'
+      );
+
+      /*
+       * For now, return customer to Home as requested.
+       */
       return res.redirect(
         `${frontendUrl}/`
       );
     }
 
     /*
-     * Pending/unknown state.
+     * =====================================================
+     * PENDING / UNKNOWN
+     * =====================================================
      *
-     * Do not mark the order as paid.
+     * Never mark the order as Paid.
+     *
+     * Return customer to Home as requested.
      */
+    console.log(
+      'PhonePe payment still pending or state is unknown:',
+      state
+    );
+
     return res.redirect(
       `${frontendUrl}/`
     );
@@ -517,12 +757,29 @@ const handlePhonePeReturn = async (
     );
 
     /*
-     * Even if verification encounters
-     * an error, never show a callback page.
+     * If frontendUrl was successfully loaded before
+     * the error, redirect safely to Home.
+     *
+     * If environment configuration itself is missing,
+     * do NOT redirect to localhost.
      */
-    return res.redirect(
-      `${frontendUrl}/`
-    );
+    if (frontendUrl) {
+      return res.redirect(
+        `${frontendUrl}/`
+      );
+    }
+
+    /*
+     * Production configuration is missing.
+     *
+     * Returning an error is safer than accidentally
+     * redirecting a customer to localhost.
+     */
+    return res.status(500).json({
+      success: false,
+      message:
+        'Payment callback configuration is missing. Please contact support.',
+    });
   }
 };
 
