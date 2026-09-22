@@ -1162,7 +1162,7 @@
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
+  object-fit: contain;
 
   transition:
     transform 0.65s ease;
@@ -1513,7 +1513,7 @@
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
+  object-fit: contain;
 
   transition:
     transform 0.55s ease;
@@ -2767,6 +2767,55 @@
   }
 
 
+  /* =======================================================
+     MOBILE DESIGN IMAGE FIX
+     Show the complete printing artwork without cropping.
+     The image keeps its natural aspect ratio.
+     ======================================================= */
+
+  .category-image-wrapper,
+  .preview-card-image-wrapper {
+    aspect-ratio: auto;
+
+    height: auto;
+
+    min-height: 0;
+
+    overflow: hidden;
+
+    display: block;
+
+    background:
+      var(--yamini-blue-soft);
+  }
+
+  .category-image,
+  .preview-card-image-wrapper img {
+    display: block;
+
+    width: 100%;
+
+    height: auto;
+
+    max-width: 100%;
+
+    object-fit: contain;
+
+    object-position: center;
+
+    transform: none;
+  }
+
+  /* Do not zoom the artwork on mobile.
+     Zooming can make the edges disappear again. */
+  .category-image-card:hover
+  .category-image,
+  .preview-card:hover
+  .preview-card-image-wrapper img {
+    transform: none;
+  }
+
+
   /* PREVIEW */
 
   .preview-card-footer {
@@ -2895,7 +2944,9 @@
   }
 
   .category-image-wrapper {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: auto;
+
+    height: auto;
   }
 
   .category-image-content {
